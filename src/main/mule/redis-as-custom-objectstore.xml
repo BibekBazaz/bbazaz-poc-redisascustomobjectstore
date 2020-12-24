@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:redis="http://www.mulesoft.org/schema/mule/redis"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/redis http://www.mulesoft.org/schema/mule/redis/current/mule-redis.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<os:config name="ObjectStore_usingRedis_Config" doc:name="ObjectStore Config" doc:id="4672ae69-e079-4586-9e21-604b0b34ab1b" >
+		<redis:nonclustered-connection host="redis-16275.c114.us-east-1-4.ec2.cloud.redislabs.com" port="16275" password="ASsEhrKq6IHQUO2lVUItC2urP13EbXmi" />
+	</os:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2f17e467-1548-465e-a807-a0e47a8ac0f7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<os:object-store name="Redis_Object_Store" doc:name="Object store" doc:id="78858781-f0af-4693-999b-672da1ba8853" config-ref="ObjectStore_usingRedis_Config" />
+	<flow name="redis-as-custom-objectstoreFlow" doc:id="4ecb0e9d-de26-4f26-a58b-480bd346a6d0" >
+		<http:listener doc:name="Listener" doc:id="12e0647e-3994-45c1-9440-47327855a7d7" config-ref="HTTP_Listener_config" path="/redis"/>
+		<logger level="INFO" doc:name="Begin Application" doc:id="781e8bb5-ba43-48cc-89bb-0d209dc4718a" message="Using Redis as Custom Objectstore"/>
+		<logger level="INFO" doc:name="Log queryParam" doc:id="fc5b0467-37cc-46e4-93dd-cf403edb0100" message='#["Query Param : " ++ attributes.queryParams.key]'/>
+		<os:store doc:name="Store key" doc:id="3e5711e3-3008-43c9-bd97-e1c44eb4590c" key="param" objectStore="Redis_Object_Store">
+			<os:value ><![CDATA[#[attributes.queryParams.key]]]></os:value>
+		</os:store>
+		<os:retrieve doc:name="Retrieve" doc:id="c30d7fcc-ecdb-47f3-b60f-1bb14deb53e8" key="param" objectStore="Redis_Object_Store"/>
+		<logger level="INFO" doc:name="Log Object store result" doc:id="32af5936-efd6-451d-af4a-670de8535561" message="#[payload]"/>
+	</flow>
+</mule>
